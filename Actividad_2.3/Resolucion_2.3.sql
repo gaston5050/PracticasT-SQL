@@ -96,7 +96,9 @@ order by IdTipoInfraccion
 
 --13 Listar todos los datos de todos los agentes que hayan registrado multas con un
 --monto que en promedio supere los $10000
-		 
+	
+	select ag.idAgente from multas ag
+
 			
 
 --14 Listar el tipo de infracción que más cantidad de multas haya registrado.
