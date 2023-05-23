@@ -97,15 +97,62 @@ order by IdTipoInfraccion
 --13 Listar todos los datos de todos los agentes que hayan registrado multas con un
 --monto que en promedio supere los $10000
 	
-	select ag.idAgente from multas ag
+	select ag.*,  from multas ag
 
-			
+	create view promediosXAgente
+	as
+	select m.idAgente, avg(m.monto) monti from multas m 
+	group by m.IdAgente
+
+	select * from promediosXAgente
+	where monti > 15000
+	order by idAgente desc
+
+	having avg(m.monto) >17000
+
+	create trigger 
 
 --14 Listar el tipo de infracción que más cantidad de multas haya registrado.
+	select m.idtipoinfraccion, count (*) from multas m
+	group by IdTipoInfraccion
+
+
+
+
 --15 Listar por cada patente, la cantidad de infracciones distintas que se cometieron.
+
+	select m.patente, count(*) from multas m
+	group by Patente
+
+	select * from multas
+	where patente like 'AB123CD'
+
+
+
+
+
+
+
 --16 Listar por cada patente, el texto literal 'Multas pagadas' y el monto total de los pagos
 --registrados por esa patente. Además, por cada patente, el texto literal 'Multas por
 --pagar' y el monto total de lo que se adeuda.
+
+	SELECT M.PATENTE,
+	'PAGADAS', 
+	(SELECT ISNULL(SUM(MUL.MONTO),0)  FROM MULTAS MUL
+	WHERE MUL.PAGADA <> 0 AND MUL.PATENTE = M.Patente
+	) MULTASPAGADAS,
+	'NO PAGADAS',(
+	SELECT   isnull(SUM(MUL.MONTO), 0)FROM MULTAS MUL
+	WHERE PAGADA = 0 AND MUL.Patente = M.Patente
+	
+	)  MULTASpORPAGAR
+
+	FROM MULTAS M
+	GROUP BY PATENTE
+	UPGRADE 
+
+
 --17 Listado con los nombres de los medios de pagos que se hayan utilizado más de 3
 --veces.
 --18 Los legajos, apellidos y nombres de los agentes que hayan labrado más de 2 multas
