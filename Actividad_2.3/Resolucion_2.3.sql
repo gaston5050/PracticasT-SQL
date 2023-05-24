@@ -151,15 +151,71 @@ order by IdTipoInfraccion
 	FROM MULTAS M
 	GROUP BY PATENTE
 	UPGRADE 
+		--use AgenciaTransito
+
 
 
 --17 Listado con los nombres de los medios de pagos que se hayan utilizado más de 3
 --veces.
+	--select * from MediosPago
+	--select * from pagos
+	--SELECT * FROM Multas
+	--
+	SELECT MP.NOMBRE FROM MediosPago MP
+	INNER JOIN PAGOS P ON P.IDMedioPago = MP.IDMedioPago
+	WHERE P.IDMedioPago IN 
+	(SELECT PA.IDMEDIOPAGO MP FROM PAGOS PA
+    GROUP BY IDMedioPago
+	HAVING COUNT(P.IDMedioPago) >3)
+
+
+	SELECT P.IDMEDIOPAGO MP FROM PAGOS P
+
+	SELECT MP.NOMBRE FROM MediosPago MP
+	INNER JOIN PAGOS P ON P.IDMedioPago = MP.IDMedioPago
+    GROUP BY P.IDMedioPago, MP.NOMBRE
+	HAVING COUNT(P.IDMedioPago) >3
+
+
+	--OBTENGO LOS ID DE LOS MP QUE SE USARON MAS DE 3 VECES
+	SELECT P.IDMEDIOPAGO MP FROM PAGOS P
+    GROUP BY IDMedioPago
+
+	SELECT P.IDMEDIOPAGO MP FROM PAGOS P
+    GROUP BY IDMedioPago
+	HAVING COUNT(P.IDMedioPago) >3
+
+
+
+
 --18 Los legajos, apellidos y nombres de los agentes que hayan labrado más de 2 multas
 --con tipos de infracciones distintas.
+select * from multas 
+order by idAgente asc
+ select * from agentes
+
+ SELECT ag.idagente, AG.LEGAJO, AG.NOMBRES, AG.APELLIDOS WFROM AGENTES AG
+ where (
+ SELECT DISTINCT COUNT(t.IDTIPOINFRACcION) FROM TipoInfracciones t
+ inner join multas m on m.IdTipoInfraccion = t.IdTipoInfraccion
+ where m.IdAgente = ag.IdAgente
+ ) >2
+
+ SELECT * FROM TipoInfracciones 
+
 --19 El total recaudado en concepto de pagos discriminado por nombre de medio de
 --pago.
+
+	 SELECT MP.NOMBRE, SUM(P.IMPORTE) FROM PAGOS P
+	 INNER JOIN MediosPago MP ON MP.IDMedioPago = P.IDMedioPago
+	 GROUP BY MP.NOMBRE ,P.IDMedioPago
+
+
+
 --20 Un listado con el siguiente formato:
+
+
+
 --Descripción Tipo Recaudado
 -------------------------------------------------
 --Tigre Localidad $xxxx
@@ -168,3 +224,33 @@ order by IdTipoInfraccion
 --Buenos Aires Provincia $xxxx
 --Santa Fe Provincia $xxxx
 --Argentina País $xxxx
+
+
+SELECT L.Localidad AS Descripción, 'Localidad' AS Tipo, SUM(P.Importe) AS Recaudado
+FROM Localidades L
+INNER JOIN Multas M ON M.IDLocalidad = L.IDLocalidad
+INNER JOIN Pagos P ON P.IDMulta = M.IDMulta
+GROUP BY L.Localidad
+UNION
+SELECT PR.Provincia AS Descripción, 'Provincia' AS Tipo, SUM(P.Importe) AS Recaudado
+FROM Provincias PR
+INNER JOIN Localidades L ON L.IDProvincia = PR.IDProvincia
+INNER JOIN Multas M ON M.IDLocalidad = L.IDLocalidad
+INNER JOIN Pagos P ON P.IDMulta = M.IDMulta
+GROUP BY PR.Provincia
+UNION
+SELECT 'Argentina' AS Descripción, 'País' AS Tipo, SUM(P.Importe) AS Recaudado
+FROM Pagos P
+
+
+select l.localidad, 'Localidad', sum(m.monto) 
+from localidades l
+inner join Multas m on m.IDLocalidad = l.IDLocalidad
+group by l.Localidad
+
+
+
+
+SELECT * FROM LOCALIDADES
+SELECT * FROM PAGOS
+SELECT * FROM MULTAS
