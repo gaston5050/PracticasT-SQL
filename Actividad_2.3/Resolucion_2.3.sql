@@ -226,6 +226,27 @@ order by idAgente asc
 --Argentina País $xxxx
 
 
+
+select l.localidad descripcion, 'localidad' tipo, sum( m.monto) recaudado from localidades l
+inner join multas m on l.IDLocalidad = m.IDLocalidad
+group by l.localidad 
+
+union
+select p.provincia descripcion, 'provincia' as tipo, sum(m.monto) recaudado from provincias p
+inner join localidades l on  l.IDProvincia = p.IDProvincia
+inner join multas m on m.IDLocalidad = l.IDLocalidad
+group by p.Provincia
+union
+select 'Argentina' descripcion, 'Pais' tipo, sum(m.monto) recaudado from multas m
+
+order by recaudado asc
+
+
+
+
+
+
+
 SELECT L.Localidad AS Descripción, 'Localidad' AS Tipo, SUM(P.Importe) AS Recaudado
 FROM Localidades L
 INNER JOIN Multas M ON M.IDLocalidad = L.IDLocalidad
@@ -249,7 +270,8 @@ inner join Multas m on m.IDLocalidad = l.IDLocalidad
 group by l.Localidad
 
 
-
+select m.patente, p.importe from multas m , pagos p
+where p.IDMulta = m.IdMulta
 
 SELECT * FROM LOCALIDADES
 SELECT * FROM PAGOS
