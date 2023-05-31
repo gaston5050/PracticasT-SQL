@@ -125,7 +125,8 @@ go
 	) multasRealilzadas from agentes ag
 
 	select count(*) from multas where 
-
+	select * from multas
+	order by idAgente asc
 
 	select m.*, datepart(hour, m.fechahora) horita from multas m
 	order by m.IdAgente desc
@@ -134,6 +135,55 @@ go
 --8 Por cada patente, el total acumulado de pagos realizados con medios de pago no
 --electrónicos y el total acumulado de pagos realizados con algún medio de pago
 --electrónicos.
+	select  m.patente, 
+	(select sum(p.importe) from pagos p
+	inner join mediospago mp on p.IDMedioPago = mp.IDMedioPago
+	where MedioPagoElectronico <> 0
+	)
+	
+	from multas m
+	group by m.patente
+		
+		select * from pagos
+		select * from MediosPago
+	
+		
+
+
+
+
+
+
+
+
+
+
+		select distinct m.patente from multas m
+
+
+
+
+
+
+
+	go
+	select distinct m.patente, 
+	(select sum(isnull(p.importe,0)) from pagos p
+	inner join mediosPago mp on mp.IDMedioPago = p.IDMedioPago
+	where  m.idmulta = p.idmulta and MedioPagoElectronico = 1
+	
+	) total 
+	from multas m
+	group by m.Patente
+	having total >0
+	group by m.Patente
+	order by m.Patente asc
+	go
+	select p.Importe, p.IDMedioPago, m.patente from pagos p
+	inner join multas m on m.IdMulta = p.IDMulta
+	group by p.Importe, p.IDMedioPago, m.patente
+	order by m.patente asc
+	select * from MediosPago
 --9 La cantidad de agentes que hicieron igual cantidad de multas por la noche que
 --durante el día.
 --10 Las patentes que, en total, hayan abonado más en concepto de pagos con medios
