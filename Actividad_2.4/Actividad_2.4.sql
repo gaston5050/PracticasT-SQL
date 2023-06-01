@@ -135,57 +135,47 @@ go
 --8 Por cada patente, el total acumulado de pagos realizados con medios de pago no
 --electrónicos y el total acumulado de pagos realizados con algún medio de pago
 --electrónicos.
-	select  m.patente, 
-	(select sum(p.importe) from pagos p
-	inner join mediospago mp on p.IDMedioPago = mp.IDMedioPago
-	where MedioPagoElectronico <> 0
-	)
-	
-	from multas m
-	group by m.patente
+
+	select distinct m.patente,
+	(select isnull(sum(p.importe), 0)  from pagos p
+		inner join MediosPago mp on mp.IDMedioPago = p.IDMedioPago
+		inner join multas mul on mul.IdMulta = p.IDMulta
 		
-		select * from pagos
-		select * from MediosPago
-	
+		where mp.MedioPagoElectronico = 1 and mul.Patente = m.Patente) electronico,
+			(select isnull(sum(p.importe), 0)  from pagos p
+		inner join MediosPago mp on mp.IDMedioPago = p.IDMedioPago
+		inner join multas mul on mul.IdMulta = p.IDMulta
 		
+		where mp.MedioPagoElectronico = 0 and mul.Patente = m.Patente) NOelectronico
 
+		from multas m
 
-
-
-
-
-
-
-
-
-		select distinct m.patente from multas m
-
-
-
-
-
-
-
-	go
-	select distinct m.patente, 
-	(select sum(isnull(p.importe,0)) from pagos p
-	inner join mediosPago mp on mp.IDMedioPago = p.IDMedioPago
-	where  m.idmulta = p.idmulta and MedioPagoElectronico = 1
-	
-	) total 
-	from multas m
-	group by m.Patente
-	having total >0
-	group by m.Patente
-	order by m.Patente asc
-	go
-	select p.Importe, p.IDMedioPago, m.patente from pagos p
-	inner join multas m on m.IdMulta = p.IDMulta
-	group by p.Importe, p.IDMedioPago, m.patente
-	order by m.patente asc
-	select * from MediosPago
+		
 --9 La cantidad de agentes que hicieron igual cantidad de multas por la noche que
 --durante el día.
+
+	select count(*), ag.Legajo, ag.IdAgente from agentes ag 
+	where
+	
+	( select count(*) from multas m
+	  where (datepart(hour,m.fechahora) between 7 and 19) and (m.IdAgente = ag.IdAgente)) 
+		=
+
+		(select count(*) from multas m
+		where (datepart(hour,m.fechahora) ) between 20 and 23 or (datepart(hour,m.fechahora) between 0 and 6) and (m.IdAgente = ag.IdAgente))
+	group by ag.Legajo, ag.IdAgente
+		.
+
+
+
+		
+	select count(*) from 
+	( select count(*) from multas m
+	  where (datepart(hour,m.fechahora) between 7 and 19) )
+
+
+	select * from multas where IdAgente = 8 
+
 --10 Las patentes que, en total, hayan abonado más en concepto de pagos con medios
 --no electrónicos que pagos con medios electrónicos. Pero debe haber abonado tanto
 --con medios de pago electrónicos como con medios de pago no electrónicos.
