@@ -153,32 +153,26 @@ go
 		
 --9 La cantidad de agentes que hicieron igual cantidad de multas por la noche que
 --durante el día.
+select count(*)from (
+select count (*) from multas m 
+inner join agentes ag on m.IdAgente = AG.IdAgente
+)
 
-	select count(*), ag.Legajo, ag.IdAgente from agentes ag 
-	where
-	
-	( select count(*) from multas m
-	  where (datepart(hour,m.fechahora) between 7 and 19) and (m.IdAgente = ag.IdAgente)) 
-		=
-
-		(select count(*) from multas m
-		where (datepart(hour,m.fechahora) ) between 20 and 23 or (datepart(hour,m.fechahora) between 0 and 6) and (m.IdAgente = ag.IdAgente))
-	group by ag.Legajo, ag.IdAgente
-		.
+) as aux
 
 
-
-		
-	select count(*) from 
-	( select count(*) from multas m
-	  where (datepart(hour,m.fechahora) between 7 and 19) )
-
-
-	select * from multas where IdAgente = 8 
 
 --10 Las patentes que, en total, hayan abonado más en concepto de pagos con medios
 --no electrónicos que pagos con medios electrónicos. Pero debe haber abonado tanto
 --con medios de pago electrónicos como con medios de pago no electrónicos.
+		select * from (
+		select m.patentes( 
+		
+			
+		)
+		from multas m
+		) as aux
+
 --11 Los legajos, apellidos y nombres de agentes que hicieron más de dos multas
 --durante el día y ninguna multa durante la noche.
 --12 La cantidad de agentes que hayan registrado más multas que la cantidad de multas
