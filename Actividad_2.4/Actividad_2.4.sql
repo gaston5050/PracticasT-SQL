@@ -153,27 +153,66 @@ go
 		
 --9 La cantidad de agentes que hicieron igual cantidad de multas por la noche que
 --durante el día.
-select count(*)from (
-select count (*) from multas m 
-inner join agentes ag on m.IdAgente = AG.IdAgente
-)
+	
+	select * from (
+					select ag.idagente, (select count(*) from multas m
+						where datepart(hour, FechaHora) between 8 and 20) mañana, 
 
-) as aux
+						(select count(*) from multas m
+						where datepart(hour, FechaHora) between 21 and 23 or DATEPART (hour, fechahora) between 0 and 7)  noche
+						from agentes ag 
+
+						group by ag.IdAgente
+			      )  aux
 
 
+				  Select * From (
+    	Select A.Apellidos, A.Nombres, A.Pseudonimo,
+   		 (  Select Count(*) From Obras O Where Year(O.FechaInicio) = 2020 And O.ID_Artista = A.ID_Artista
+   		 ) as Cant2020,
+   		 (Select Count(*) From Obras O Where Year(O.FechaInicio) = 2021 And O.ID_Artista = A.ID_Artista
+   		 ) as Cant2021,
+		 ( Select Count(*) From Obras O Where Year(O.FechaInicio) = 2022 And O.ID_Artista = A.ID_Artista
+    		) as Cant2022
+  		 From Artistas A
+	) As Aux
+	Where Aux.Cant2020 > 0 And Aux.Cant2021 = 0
+
+			
+
+
+
+
+	
+	select m.idagente, count(*) from multas m
+	
+	group by m.IdAgente
+
+	select m.idagente, count(*) from multas m
+	where datepart(hour, FechaHora) between 8 and 20
+	group by m.IdAgente
+
+	select m.idagente, count(*) from multas m
+	where datepart(hour, FechaHora) between 21 and 23 or DATEPART (hour, fechahora) between 0 and 7
+	group by m.IdAgente
+
+
+
+
+	select count(*) from 
+	(select * from 
+	
 
 --10 Las patentes que, en total, hayan abonado más en concepto de pagos con medios
 --no electrónicos que pagos con medios electrónicos. Pero debe haber abonado tanto
 --con medios de pago electrónicos como con medios de pago no electrónicos.
-		select * from (
-		select m.patentes( 
 		
-			
-		)
-		from multas m
-		) as aux
 
 --11 Los legajos, apellidos y nombres de agentes que hicieron más de dos multas
 --durante el día y ninguna multa durante la noche.
+
+
+
+
 --12 La cantidad de agentes que hayan registrado más multas que la cantidad de multas
 --generadas por un radar (multas con IDAgente con valor NULL)
