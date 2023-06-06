@@ -154,59 +154,56 @@ go
 --9 La cantidad de agentes que hicieron igual cantidad de multas por la noche que
 --durante el día.
 	
-	select * from (
-					select ag.idagente, (select count(*) from multas m
-						where datepart(hour, FechaHora) between 8 and 20) mañana, 
+	select count(*) from (
+					select ag.idagente,(select count(*) from multas m
+						where datepart(hour, FechaHora) between 8 and 20 and ag.IdAgente = m.IdAgente) mañana , 
 
 						(select count(*) from multas m
-						where datepart(hour, FechaHora) between 21 and 23 or DATEPART (hour, fechahora) between 0 and 7)  noche
+						where (datepart(hour, FechaHora) between 21 and 23 or DATEPART (hour, fechahora) between 0 and 7 ) and ag.IdAgente = m.IdAgente)  noche
 						from agentes ag 
 
 						group by ag.IdAgente
 			      )  aux
 
-
-				  Select * From (
-    	Select A.Apellidos, A.Nombres, A.Pseudonimo,
-   		 (  Select Count(*) From Obras O Where Year(O.FechaInicio) = 2020 And O.ID_Artista = A.ID_Artista
-   		 ) as Cant2020,
-   		 (Select Count(*) From Obras O Where Year(O.FechaInicio) = 2021 And O.ID_Artista = A.ID_Artista
-   		 ) as Cant2021,
-		 ( Select Count(*) From Obras O Where Year(O.FechaInicio) = 2022 And O.ID_Artista = A.ID_Artista
-    		) as Cant2022
-  		 From Artistas A
-	) As Aux
-	Where Aux.Cant2020 > 0 And Aux.Cant2021 = 0
-
-			
+		where aux.mañana = aux.noche
 
 
 
+--- consulta para chequear resultados
+select ag.idagente id,(select count(*) from multas m
+						where datepart(hour, FechaHora) between 8 and 20 and ag.IdAgente = m.IdAgente) mañana , 
 
-	
-	select m.idagente, count(*) from multas m
-	
-	group by m.IdAgente
+						(select count(*) from multas m
+						where (datepart(hour, FechaHora) between 21 and 23 or DATEPART (hour, fechahora) between 0 and 7 ) and ag.IdAgente = m.IdAgente)  noche
+						from agentes ag 
 
-	select m.idagente, count(*) from multas m
-	where datepart(hour, FechaHora) between 8 and 20
-	group by m.IdAgente
+						group by ag.IdAgente
 
-	select m.idagente, count(*) from multas m
-	where datepart(hour, FechaHora) between 21 and 23 or DATEPART (hour, fechahora) between 0 and 7
-	group by m.IdAgente
-
-
-
-
-	select count(*) from 
-	(select * from 
-	
 
 --10 Las patentes que, en total, hayan abonado más en concepto de pagos con medios
 --no electrónicos que pagos con medios electrónicos. Pero debe haber abonado tanto
 --con medios de pago electrónicos como con medios de pago no electrónicos.
-		
+		select * from (
+		select m.patente,
+	    (select  isnull(sum(p.importe),0) from pagos p
+		inner join mediospago mp on p.IDMedioPago = mp.IDMedioPago
+		where p.IDMulta = m.IdMulta and mp.MedioPagoElectronico = 1) electronioc,
+		 (select  isnull(sum(p.importe),0) from pagos p
+		inner join mediospago mp on p.IDMedioPago = mp.IDMedioPago
+		where p.IDMulta = m.IdMulta and mp.MedioPagoElectronico = 0) noElectronioc
+
+		from multas m ) aux
+		where aux.electronioc = aux.noElectronioc
+
+	select p.idmulta from pagos p
+	inner join multas m on p.IDMulta = m.IdMulta
+	where m.Patente like 'AB123CD'
+	SELECT * FROM MediosPago
+	SELECT * FROM MULTAS
+	INSERT INTO PAGOS (IDMULTA,IMPORTE, FECHA, IDMEDIOPAGO) 
+	VALUES(1,32000, GETDATE(), 1)
+
+
 
 --11 Los legajos, apellidos y nombres de agentes que hicieron más de dos multas
 --durante el día y ninguna multa durante la noche.
