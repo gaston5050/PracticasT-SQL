@@ -193,23 +193,52 @@ select ag.idagente id,(select count(*) from multas m
 		where p.IDMulta = m.IdMulta and mp.MedioPagoElectronico = 0) noElectronioc
 
 		from multas m ) aux
-		where aux.electronioc = aux.noElectronioc
+		where (aux.electronioc < aux.noElectronioc) and aux.electronioc >0  and aux.noElectronioc >0
 
 	select p.idmulta from pagos p
 	inner join multas m on p.IDMulta = m.IdMulta
 	where m.Patente like 'AB123CD'
 	SELECT * FROM MediosPago
 	SELECT * FROM MULTAS
+	select * from pagos
 	INSERT INTO PAGOS (IDMULTA,IMPORTE, FECHA, IDMEDIOPAGO) 
-	VALUES(1,32000, GETDATE(), 1)
+	VALUES(1,64000, GETDATE(), 5)
 
 
 
 --11 Los legajos, apellidos y nombres de agentes que hicieron más de dos multas
 --durante el día y ninguna multa durante la noche.
-
+	select * from(
+	select ag.legajo LEGAJO, ag.nombres NOMBRE, ag.apellidos APELLIDO,
+	(select count(*) from multas m
+	where DATEPART(hour, m.FechaHora) between 8 and 20 and ag.IdAgente = m.IdAgente ) mañana,
+	(select count(*) from multas m
+	where (DATEPART(hour, m.FechaHora) between 21 and 24 or DATEPART(hour, m.FechaHora) between 0 and 7 ) and ag.IdAgente = m.IdAgente)  noche
+	from agentes ag
+	
+	) aux
+	where aux.mañana > 2 and aux.noche = 0
 
 
 
 --12 La cantidad de agentes que hayan registrado más multas que la cantidad de multas
 --generadas por un radar (multas con IDAgente con valor NULL)
+
+	SELECT count(*) from (
+		
+		select isnull(ag.idAgente, 'radar')  x,
+
+		(select count(*) from multas m 
+		where m.IdAgente = ag.idagente ) multasXagente,
+
+		(select count (*) from multas m
+		where m.IdAgente is null) redar
+
+		from agentes ag
+
+		) aux
+	where aux.multasXagente > aux.redar
+
+	select * from multas	
+	select count(IdMulta) from multas
+	where IdAgente is NULL
