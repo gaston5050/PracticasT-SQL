@@ -47,33 +47,62 @@
 --parámetro que representa la patente de un vehículo. Listar las multas que registra.
 --Indicando fecha y hora de la multa, descripción del tipo de multa e importe a abonar.
 --También una leyenda que indique si la multa fue abonada o no.
-
+--select convert(char(8), getdate(), 108) as [hh:mm:ss]; X
+--select convert(varchar, getdate(), 1) V
  CREATE PROCEDURE  SP_MULTASVEHICULO ( @patente varchar (7) )
  as
  begin 
-	select  datefromparts (m.fechahora), datepart(hour, m.fechahora), tp.descripcion,  m.monto
+	select  convert (date, m.fechahora, 1) FECHA,  convert(time, m.fechahora) HORA, tp.descripcion DESCRIPCION,  m.monto MONTO
 	from multas m 
 	inner join TipoInfracciones tp on tp.IdTipoInfraccion = m.IdTipoInfraccion
 
  end
  
+ --funcion con total de multas pagas y no pagas por patente
+ go
+ create function fn_totalMultas(
+	@patente varchar (9)
+	)
+	returns money
+	as 
+	begin
+	declare @total money
+	select @total = isnull(sum(monto), 0) from multas
+	where Patente LIKE @patente
+	return @total
+	end
+	go
+	---
+	go
+	drop function fn_totalPagos
+create function fn_totalPagos(
+	@patente varchar (9)
+	)
+	returns money
+	as 
+	begin 
+	declare @total money
+	select @total = isnull(sum(p.importe) ,0) from pagos p
+	left join multas m on p.IDMulta = m.IdMulta
+	where m.Patente LIKE @patente
+	return @total
+	end
+	go
+
+	select distinct m.patente, dbo.fn_totalPagos(m.patente), dbo.fn_totalmultas(m.patente) from multas m
 
 
+	select m.patente, isnull(sum(p.importe), 0) pago,  isnull(sum(m.monto),0) multa from multas m
+	left join pagos p on m.idmulta = p.idmulta
+	group by m.patente
+
+	select * from fn_totalPagos
+	select m.patente, isnull(sum(m.monto),0) multa from multas m
+	group by m.patente
 
 
-	CREATE PROCEDURE SP_NOMBREAGENTE(
-	@IDAGENTE INT )
-	AS 
-	BEGIN 
-	SELECT AG.NOMBRES FROM AGENTES AG
-	WHERE AG.IdAgente = @IDAGENTE
-	END 
-	EXEC SP_NOMBREAGENTE 4
+	select sum(m.monto) from multas m where m.patente like 'HIJ456'
 
-
-
-
-	
 
 --4 Crear una función que reciba un parámetro que representa la patente de un vehículo
 --y devuelva el total adeudado por ese vehículo en concepto de multas.
