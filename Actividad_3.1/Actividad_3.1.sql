@@ -59,6 +59,50 @@
  end
  
  --funcion con total de multas pagas y no pagas por patente
+
+ create function fn_multasPagas (
+	@patente varchar(9)
+	)
+returns int
+as 
+begin
+
+declare @pagas int
+
+select @pagas = count(*) from multas m where m.Patente like @patente and m.Pagada = 1
+
+return  @pagas
+end				
+
+create function fn_MULTASNOPAGAS (
+	@patente varchar(9)
+	)
+returns int
+as 
+begin
+
+declare @pagas int
+
+select @pagas = count(*) from PAGOS P
+LEFT JOIN MULTAS M ON P.IDMulta = M.IdMulta
+where m.Patente like @patente and m.Pagada = 0
+
+return  @pagas
+end				
+
+
+
+
+select dbo.fn_multasPagas(M.Patente) PAGAS, DBO.fn_MULTASNOPAGAS(M.Patente) from multas m
+
+where m.Patente like 'AB123CD'
+
+
+select * from multas M
+ORDER BY M.PATENTE
+
+
+
  go
  create function fn_totalMultas(
 	@patente varchar (9)
@@ -68,7 +112,7 @@
 	begin
 	declare @total money
 	select @total = isnull(sum(monto), 0) from multas
-	where Patente LIKE @patente
+	where Patente LIKE @patente 
 	return @total
 	end
 	go
@@ -91,29 +135,80 @@ create function fn_totalPagos(
 
 	select distinct m.patente, dbo.fn_totalPagos(m.patente), dbo.fn_totalmultas(m.patente) from multas m
 
-
+	select m.patente, * from multas group by Multas.Patente
 	select m.patente, isnull(sum(p.importe), 0) pago,  isnull(sum(m.monto),0) multa from multas m
-	left join pagos p on m.idmulta = p.idmulta
-	group by m.patente
-
-	select * from fn_totalPagos
-	select m.patente, isnull(sum(m.monto),0) multa from multas m
+	left  join pagos p on m.idmulta = p.idmulta
 	group by m.patente
 
 
-	select sum(m.monto) from multas m where m.patente like 'HIJ456'
 
 
 --4 Crear una función que reciba un parámetro que representa la patente de un vehículo
 --y devuelva el total adeudado por ese vehículo en concepto de multas.
 
+create function fn_totalMultasActual(
+	@patente varchar (9)
+	)
+returns money
+as 
+begin 
+declare  @total money
+
+select @total = sum(m.monto) from multas m 
+where m.Patente like @patente
+return @total
+end
+select dbo.fn_totalMultasactual ('ab123cd')
+select * from multas
+
+
+
+
 
 
 --5 Crear una función que reciba un parámetro que representa la patente de un vehículo
 --y devuelva el total abonado por ese vehículo en concepto de multas.
+
+	create FUNCTION fn_totalAbonado (
+	@patente varchar(9)
+	)
+	returns money
+	as 
+	begin
+	declare @total money
+	select @total = isnull(sum(m.importe),0) from pagos p
+	left join multas m on m.IDMulta = p.IDMulta
+
+	where (m.Patente = @patente) and m.Pagada = 1
+
+	return @total
+	end
+
+
+	select m.patente, dbo.fn_totalAbonado (m.Patente) from multas M
+	select * from pagos
+	update multas  set pagada  = 1
+	where idmulta = 1
+	select * from multas 
+	where patente like 'ab123cd'
+
+
 --6 Crear un procedimiento almacenado llamado SP_AgregarMulta que reciba
 --IDTipoInfraccion, IDLocalidad, IDAgente, Patente, Fecha y hora, Monto a abonar y
 --registre la multa.
+
+	create procedure sp_agregarMulta( 
+	@idTipoInfraccion int,
+	@idlocalidad int, 
+	@idagente int,
+	@patente varchar(9),
+	@fecha date,
+	@time time,
+	@monto money
+	)
+
+
+
 --7 Crear un procedimiento almacenado llamado SP_ProcesarPagos que determine el
 --estado Pagada de todas las multas a partir de los pagos que se encuentran
 --registrados (La suma de todos los pagos de una multa debe ser igual o mayor al
