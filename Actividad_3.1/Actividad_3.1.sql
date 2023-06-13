@@ -213,3 +213,64 @@ select * from multas
 --estado Pagada de todas las multas a partir de los pagos que se encuentran
 --registrados (La suma de todos los pagos de una multa debe ser igual o mayor al
 --monto de la multa para considerarlo Pagado).
+
+select distinct patente from multas
+	
+--	
+	create procedure SP_procesarPagos
+	as 
+	begin 
+
+	
+	update multas set pagada = 0
+	where idmulta = 1
+
+					
+
+
+
+
+
+		go
+			select * from (
+				select distinct p.idmulta,
+				(select sum(m.monto) from multas m 
+				where  p.idmulta = m.idmulta) deudaPorMulta,
+
+				(select sum(pa.importe) from pagos pa
+				left join multas m on pa.IDMulta = m.idmulta
+				where  p.idmulta = m.idmulta) pagoMulta
+
+				from pagos p
+				)  aux
+
+				if (
+
+
+
+			go
+				
+				
+	end
+
+
+	use AgenciaTransito
+	select * from multas
+
+	update multas set pagada = 0
+	where idmulta = 1
+
+
+-- ESTRUCTURA TRANSACCIon
+	--comentar varias lineas de codigo ctrl + k , ctrl + c
+	-- descomentar varias lineas de codigo ctrl + k , ctrl + u
+
+		BEGIN TRY
+		 BEGIN TRANSACTION
+		 COMMIT TRANSACTION
+		END TRY
+		BEGIN CATCH
+		 ROLLBACK TRANSACTION
+		END TRANSACTION
+
+	
