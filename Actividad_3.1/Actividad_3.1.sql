@@ -217,22 +217,13 @@ select * from multas
 select distinct patente from multas
 	
 --	
-	create procedure SP_procesarPagos
+exec sp_procesarpagos
+	alter procedure SP_procesarPagos
 	as 
 	begin 
-
-	
-	update multas set pagada = 0
-	where idmulta = 1
-
-					
-
-
-
-
-
-		go
-			select * from (
+						update multas set pagada = 1
+						where idmulta  in (
+			select idmulta from (
 				select distinct p.idmulta,
 				(select sum(m.monto) from multas m 
 				where  p.idmulta = m.idmulta) deudaPorMulta,
@@ -243,15 +234,34 @@ select distinct patente from multas
 
 				from pagos p
 				)  aux
+				where aux.deudaPorMulta <= aux.pagoMulta
+				)
 
-				if (
-
-
-
-			go
-				
-				
+		
+			
+			
 	end
+
+				select * from multas
+				where pagada = 1
+				order by idmulta desc
+
+
+
+	select idmulta from (
+				select distinct p.idmulta,
+				(select sum(m.monto) from multas m 
+				where  p.idmulta = m.idmulta) deudaPorMulta,
+
+				(select sum(pa.importe) from pagos pa
+				left join multas m on pa.IDMulta = m.idmulta
+				where  p.idmulta = m.idmulta) pagoMulta
+
+				from pagos p
+				)  aux
+				where aux.deudaPorMulta <= aux.pagoMulta
+				
+				
 
 
 	use AgenciaTransito
