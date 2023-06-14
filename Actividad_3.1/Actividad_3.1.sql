@@ -196,17 +196,26 @@ select * from multas
 --6 Crear un procedimiento almacenado llamado SP_AgregarMulta que reciba
 --IDTipoInfraccion, IDLocalidad, IDAgente, Patente, Fecha y hora, Monto a abonar y
 --registre la multa.
-
-	create procedure sp_agregarMulta( 
+select * from multas
+	alter procedure sp_agregarMulta( 
 	@idTipoInfraccion int,
 	@idlocalidad int, 
 	@idagente int,
 	@patente varchar(9),
-	@fecha date,
-	@time time,
 	@monto money
 	)
+	as
+	begin
+		DECLARE @FECHITA DATETIME 
+	    SET @FECHITA = GETDATE()
+		insert into multas (idtipoinfraccion, idlocalidad, idagente, patente, FechaHora, monto)
+		values( @idtipoinfraccion,   @idlocalidad, @idagente, @patente,@FECHITA, @monto)
 
+	end
+	SELECT * FROM MULTAS
+	DECLARE @FECHITA DATETIME 
+	SET @FECHITA = GETDATE()
+	exec sp_agregarmulta 4, 12, 1, 'ZAB234', 50
 
 
 --7 Crear un procedimiento almacenado llamado SP_ProcesarPagos que determine el
@@ -218,57 +227,56 @@ select distinct patente from multas
 	
 --	
 exec sp_procesarpagos
+
 	alter procedure SP_procesarPagos
 	as 
 	begin 
-						update multas set pagada = 1
-						where idmulta  in (
-			select idmulta from (
-				select distinct p.idmulta,
-				(select sum(m.monto) from multas m 
-				where  p.idmulta = m.idmulta) deudaPorMulta,
+				update multas set pagada = 1
+				where idmulta  in (
+									select idmulta from (
+									select distinct p.idmulta,
+									(select sum(m.monto) from multas m 
+									where  p.idmulta = m.idmulta) deudaPorMulta,
 
-				(select sum(pa.importe) from pagos pa
-				left join multas m on pa.IDMulta = m.idmulta
-				where  p.idmulta = m.idmulta) pagoMulta
+									(select sum(pa.importe) from pagos pa
+									left join multas m on pa.IDMulta = m.idmulta
+									where  p.idmulta = m.idmulta) pagoMulta
 
-				from pagos p
-				)  aux
-				where aux.deudaPorMulta <= aux.pagoMulta
-				)
+									from pagos p
+									)  aux
+									where aux.deudaPorMulta <= aux.pagoMulta
+							   	)
 
 		
 			
 			
 	end
 
-				select * from multas
-				where pagada = 1
-				order by idmulta desc
+		
 
 
 
-	select idmulta from (
-				select distinct p.idmulta,
-				(select sum(m.monto) from multas m 
-				where  p.idmulta = m.idmulta) deudaPorMulta,
-
-				(select sum(pa.importe) from pagos pa
-				left join multas m on pa.IDMulta = m.idmulta
-				where  p.idmulta = m.idmulta) pagoMulta
-
-				from pagos p
-				)  aux
-				where aux.deudaPorMulta <= aux.pagoMulta
-				
-				
-
-
-	use AgenciaTransito
-	select * from multas
-
-	update multas set pagada = 0
-	where idmulta = 1
+	--select idmulta from (
+	--			select distinct p.idmulta,
+	--			(select sum(m.monto) from multas m 
+	--			where  p.idmulta = m.idmulta) deudaPorMulta,
+	--
+	--			(select sum(pa.importe) from pagos pa
+	--			left join multas m on pa.IDMulta = m.idmulta
+	--			where  p.idmulta = m.idmulta) pagoMulta
+	--
+	--			from pagos p
+	--			)  aux
+	--			where aux.deudaPorMulta <= aux.pagoMulta
+	--			
+	--			
+	--
+	--
+	--use AgenciaTransito
+	--select * from multas
+	--
+	--update multas set pagada = 0
+	--where idmulta = 1
 
 
 -- ESTRUCTURA TRANSACCIon
