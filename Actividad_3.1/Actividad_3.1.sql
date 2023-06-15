@@ -161,6 +161,21 @@ end
 select dbo.fn_totalMultasactual ('ab123cd')
 select * from multas
 
+alter function fn_totalMultasActual(
+	@patente varchar (9)
+	)
+returns money
+as 
+begin 
+declare  @total money
+
+select @total = sum(m.monto) from multas m 
+where m.Patente like @patente and m.Pagada = 0
+return @total
+end
+select dbo.fn_totalMultasactual ('ab123cd')
+select * from multas
+order by Patente asc
 
 
 
