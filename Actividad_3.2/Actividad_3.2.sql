@@ -6,7 +6,7 @@
 --Hacer un trigger que al eliminar un Agente su estado Activo pase de True a False.
 	SELECT * FROM AGENTES
 	delete from Agentes where 
-	IdAgente = 1
+	IdAgente = 3
 	 
 	 create trigger tr_eliminar_agente on agentes
 	 instead of delete
@@ -35,10 +35,9 @@ alter trigger tr_eliminar_agente on agentes
 	 instead of delete
 	 as 
 	 begin
-	if(select activo from deleted ) = 0
-	begin 
+	 if(select activo from deleted ) = 0 begin 
 		begin try
-			begin transaction 
+				begin transaction 
 				update multas set IdAgente = NULL
 				where  IdAgente = (select IdAgente from deleted)
 
@@ -48,18 +47,23 @@ alter trigger tr_eliminar_agente on agentes
 			commit transaction
 
 		end try
-		begin catch
-			rollback transaction 
-			raiserror('no funciono' , 16, 1)
 
-		end catch
+			begin catch
+				rollback transaction 
+				raiserror('no funciono' , 16, 1)
 
-	 end
-	 else begin 
+			end catch
+			end
+		 else begin 
 		update Agentes set Activo = 0
 		where IdAgente  = (select IdAgente from deleted)
 	 end
 	 end
+
+
+
+
+
 	 select * from agentes
 
 	 select * from multas
@@ -68,7 +72,12 @@ alter trigger tr_eliminar_agente on agentes
 		--where IdAgente  = (select IdAgente from deleted)
 	 end
 
-	delete from Agentes where IdAgente = 1
+	delete from Agentes where IdAgente = 5
+
+	SELECT * FROM MULTAS WHERE IdAgente = 5
+
+
+
 --3
 --Hacer un trigger que al insertar una multa realice las siguientes acciones:
 --No permitir su ingreso si el Agente asociado a la multa no se encuentra Activo. 
@@ -78,7 +87,12 @@ alter trigger tr_eliminar_agente on agentes
 --Aplicar un recargo del 25% al monto de la multa si no es la primera multa del mismo tipo de infracción del vehículo en el año.
 --Establecer el estado Pagada como False.
 		
-
+--		Case 
+--    When Email Is null And Celular is null and Telefono is null then 'Incontactable'
+--    When Email Is null And Celular is null then Telefono
+--    When Email Is null Then Celular
+--    Else Email
+--End As DatosContacto
 
 		select * from  multas
 		select * from agentes
@@ -88,34 +102,74 @@ alter trigger tr_eliminar_agente on agentes
 
 		exec sp_agregarmulta 4, 12,3, 'ZAB234', 666
 
+
 	 ALTER trigger tr_inserta_multa on multas
 	 AFTER insert
 	 as 
 	 begin
+		
+		if (select ag.activo from inserted ) = 1 begin	
 
 			begin try 
+					declare @monto money
+					declare @idtipoInfra int
+					declare @idmulta int
+					declare @patente varchar(10)
+
+					Select @idtipoInfra = idtipoinfraccion from inserted
+					select @idmulta = idmulta from inserted
+					select @patente = patente from inserted
+
+					set @monto = (select ti.importeReferencia from TipoInfracciones ti
+					where  ti.IdTipoInfraccion = @idtipoInfra)
+
+
+					if  (select count(*) from multas where idmulta <>  @idmulta and Patente like @patente begin
+					set @monto = @monto * 1.2
+					end
+
+					if year(fechahora) = year(getdate()) begin
+					set @monto = @monto * 1.2
+					end
+
+
+
+
+
+
+
+
+				
 
 					begin transaction
-									if (select ag.activo from agentes ag
-									inner join inserted ins on ag.IdAgente =ins.idAgente
-									where ag.IdAgente = ins.IdAgente) = 1
-									begin	
-										ROLLBACK TRANSACTION
-											print 'no se pudo 2'
+					 
+
 										
-									end
-									ELSE BEGIN
-											
-					commit transaction
-					END
+					commit transaction					
+				
 			end try
 
 			begin catch
-
+				declare @mensajeError varchar(250)
+				set @mensajeError = ERROR_MESSAGE
 				rollback transaction
-				print 'no se pudo'
+				RAISEERROR(@mensajeError, 16, 1)
+
 
 			end catch
+	    end
+		
+		else begin 
+
+			
+			rollback transaction 
+
+			RAISEERROR('Agente invalido', 16, 1)
+
+		end
+
+
+
 	 end
 
 
