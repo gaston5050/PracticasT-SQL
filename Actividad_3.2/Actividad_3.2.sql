@@ -95,44 +95,77 @@ alter trigger tr_eliminar_agente on agentes
 --End As DatosContacto
 
 		select * from  multas
+		where  Patente like 'zab234'
+		order by IdMulta desc
 		select * from agentes
 
-		insert into multas (idtipoinfraccion, idlocalidad, idagente, patente, FechaHora, monto,PAGADA)
-		values( 4,  12,2, 'ZAB234',GETDATE(), 999, 0)
+		select * from TipoInfracciones
 
-		exec sp_agregarmulta 4, 12,3, 'ZAB234', 666
+		insert into multas (idtipoinfraccion, idlocalidad, idagente, patente, FechaHora, monto,PAGADA)
+		values( 4,  12,4, 'ZAB234',GETDATE(), 11, 0)
+
+		--exec sp_agregarmulta 4, 12,3, 'ZAB234', 666
 
 
 	 ALTER trigger tr_inserta_multa on multas
 	 AFTER insert
 	 as 
 	 begin
-		
-		if (select ag.activo from inserted ) = 1 begin	
 
-			begin try 
+
 					declare @monto money
 					declare @idtipoInfra int
 					declare @idmulta int
 					declare @patente varchar(10)
+					declare @fecha int
+					declare @idagente int
 
+
+					select @idagente = idagente from inserted
+					print 'nada'
+		print @idagente
 					Select @idtipoInfra = idtipoinfraccion from inserted
 					select @idmulta = idmulta from inserted
 					select @patente = patente from inserted
+					select @fecha =  year (fechahora) from inserted 
+
 
 					set @monto = (select ti.importeReferencia from TipoInfracciones ti
 					where  ti.IdTipoInfraccion = @idtipoInfra)
 
+		declare @activo  bit
+		select @activo = ag.activo from Agentes ag
+		
+		where ag.IdAgente = @idagente
 
-					if  (select count(*) from multas where idmulta <>  @idmulta and Patente like @patente begin
+		print 'nada'
+		print @idagente
+		print @activo
+		print 'nada'
+
+
+		
+		if  @activo = 1 begin	
+
+			begin try 
+
+					begin transaction
+
+					if  (select count(*) from multas where idmulta <>  @idmulta and Patente like @patente  and year(fechahora) = @fecha ) > 1
+
+					begin
 					set @monto = @monto * 1.2
+
 					end
 
-					if year(fechahora) = year(getdate()) begin
-					set @monto = @monto * 1.2
+					if  (select count(*) from multas where idmulta <>  @idmulta and Patente like @patente  and year(fechahora) = @fecha  and idtipoinfraccion = @idtipoInfra) >1
+
+					begin
+					set @monto = @monto * 1.25
+
 					end
-
-
+					update multas set monto = @monto where IdMulta = @idmulta
+					update multas set pagada = 0 where IdMulta = @idmulta
 
 
 
@@ -141,7 +174,6 @@ alter trigger tr_eliminar_agente on agentes
 
 				
 
-					begin transaction
 					 
 
 										
@@ -150,10 +182,12 @@ alter trigger tr_eliminar_agente on agentes
 			end try
 
 			begin catch
-				declare @mensajeError varchar(250)
-				set @mensajeError = ERROR_MESSAGE
+
+				--declare @mensajeError varchar(250)
+				--set @mensajeError = ERROR_MESSAGE
 				rollback transaction
-				RAISEERROR(@mensajeError, 16, 1)
+				--RAISERROR(@mensajeError, 16, 1)
+				RAISERROR('Ocurrio un error', 16, 1)
 
 
 			end catch
@@ -164,8 +198,8 @@ alter trigger tr_eliminar_agente on agentes
 			
 			rollback transaction 
 
-			RAISEERROR('Agente invalido', 16, 1)
-
+			RAISERROR('Agente invalido', 16, 1)
+			    
 		end
 
 
@@ -195,6 +229,60 @@ alter trigger tr_eliminar_agente on agentes
 --Verificar que la multa que se intenta pagar se encuentra no pagada.
 --Verificar que el Importe del pago sumado a los importes anteriores de la misma multa no superen el Monto a abonar.
 
+select * from Multas where idmulta =8
+select * from pagos where idmulta = 8
+
+ insert into pagos (IDMulta, Importe,Fecha,IDMedioPago) 
+ values (8,32500, getdate(), 2)
+
+ select * from pagos
+
+	alter trigger tr_pago on pagos
+	after insert
+	as 
+	begin
+		declare @idmulta int
+
+		select @idmulta = idmulta from inserted
+
+		if((select m.Pagada from multas m where m.IdMulta = @idmulta) = 0 ) 
+		and 
+		(select monto from multas where idmulta = @idmulta) >= (select sum (importe) from pagos where  IDMulta = @idmulta)
+		begin 
+			
+		begin try
+			 begin transaction
+				if(select monto from multas where idmulta = @idmulta) = (select sum (importe) from pagos where  IDMulta = @idmulta)
+				begin
+				 update Multas set pagada = 1  where IdMulta = @idmulta
+				 end
+
+			 commit transaction
+
+
+
+		end try
+
+		begin catch
+			rollback transaction
+
+		end catch
+		end
+		
+		else begin 
+			rollback transaction
+
+			raiserror('surgio un error', 16,1)
+		end
+
+
+			
+
+
+
+	end
+
+go
 --En ambos casos impedir el ingreso y mostrar un mensaje acorde.
 
 --Si el pago cubre el Monto de la multa ya sea con un pago único o siendo la suma de pagos anteriores sobre la misma multa. Además de registrar el pago se debe modificar el estado Pagada de la multa relacionada.
