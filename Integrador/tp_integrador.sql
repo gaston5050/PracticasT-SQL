@@ -63,7 +63,22 @@ End
 --(20 puntos)
 
 
+	create procedure SP_descalificar (
+	 @idfotografia int )
+	as begin
+		begin try
+			begin transaction 
 
+
+			commit transaction
+
+		end try
+		begin catch
+			rollback transaction
+		end catch
+		
+
+	end
 
 
 
