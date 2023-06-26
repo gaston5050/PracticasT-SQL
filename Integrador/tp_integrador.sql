@@ -63,27 +63,74 @@ End
 --(20 puntos)
 
 
-	create procedure SP_descalificar (
+
+
+	alter procedure SP_descalificar (
 	 @idfotografia int )
+
+
+
+
 	as begin
 		begin try
+	
+			declare @vigencia int
+			declare @idfotografia int 
+			set @idfotografia = 2
+
+			select @vigencia = count(*) from concursos c
+			inner join Fotografias f on f.IDConcurso = c.ID
+			where @idfotografia = f.ID and c.Fin > getdate()
+
+			print @vigencia 
+		
+		
 			begin transaction 
 
+	
+				begin
 
-			commit transaction
+					update fotografias set Descalificada = 1
+					where id= @idfotografia
 
-		end try
+					delete from votaciones where IDFotografia = @idfotografia
+
+					commit transaction
+
+			
+				end
+				else begin
+			print 'llega'
+			raiserror( 'no sirve', 16,1)
+			end
+
+					
+				
+				end try
 		begin catch
+			if @@TRANCOUNT > 0
+			begin
 			rollback transaction
+			--raiserror( 'NO SE PUEDE BORRAR ESTA FOTOGRAFIA', 16, 1)
+			end
+			print error_message()
+
+
+
+
+
+
 		end catch
 		
 
 	end
 
+	select *  from fotografias f  (cast(gETDATE() as date))  <= (select c.fin from concursos c
+					inner join fotografias f on f.idconcurso = c.id)
 
 
-
-
+					select * from Fotografias
+	exec SP_descalificar 11
 --3) Al insertar una fotografía verificar que el usuario creador de la fotografía tenga el
 --ranking suficiente para participar en el concurso. También se debe verificar que el
 --concurso haya iniciado y no finalizado. Si ocurriese un error, mostrarlo con un
