@@ -61,82 +61,147 @@ End
 --votaciones registradas a la fotografía en cuestión. Sólo se puede descalificar una
 --fotografía si pertenece a un concurso no finalizado.
 --(20 puntos)
+ use AgenciaTransito
+ drop database ExamenIntegrador
+
+ select * from fotografias
+ select * from votaciones
+ select  * from concursos
 
 
-
-
-	alter procedure SP_descalificar (
+	exec SP_descalificar 3
+	exec SP_Descalificar2 1
+	select * from 
+	create procedure SP_descalificar
+	(
 	 @idfotografia int )
+	 as 
+	 begin
 
-
-
-
-	as begin
-		begin try
+		declare @noFinalizo int
 	
-			declare @vigencia int
-			declare @idfotografia int 
-			set @idfotografia = 2
 
-			select @vigencia = count(*) from concursos c
-			inner join Fotografias f on f.IDConcurso = c.ID
-			where @idfotografia = f.ID and c.Fin > getdate()
-
-			print @vigencia 
 		
-		
-			begin transaction 
 
-	
-				begin
 
-					update fotografias set Descalificada = 1
-					where id= @idfotografia
+		select @noFinalizo = count(*) from Concursos c
+		inner join fotografias f on f.IDConcurso =  c.id
+		where @idfotografia = f.ID  and convert(date, getdate()) <= c.Fin
 
-					delete from votaciones where IDFotografia = @idfotografia
+
+		if  @noFinalizo = 1 
+		begin
+			begin try
+					begin transaction
+						
+						update fotografias set descalificada = 1
+						where id = @idfotografia
+						
+						delete from votaciones where idfotografia = @idfotografia
+
+						print @nofinalizo
 
 					commit transaction
-
-			
-				end
-				else begin
-			print 'llega'
-			raiserror( 'no sirve', 16,1)
-			end
-
-					
-				
-				end try
-		begin catch
-			if @@TRANCOUNT > 0
-			begin
-			rollback transaction
-			--raiserror( 'NO SE PUEDE BORRAR ESTA FOTOGRAFIA', 16, 1)
-			end
-			print error_message()
+			end try
 
 
+			begin catch
+					rollback transaction
+					raiserror('error de sistema', 16,1)
 
 
+			end catch
 
+		end
+		else begin
+			raiserror( 'el torneo no ha finalizado', 16, 1)
 
-		end catch
+		end
+
+		print 'contador de transacciones'
+		print @@trancount
+	
+
 		
+	 end
 
-	end
+	
+	update concursos set fin = cast (
+	where id = 1
 
-	select *  from fotografias f  (cast(gETDATE() as date))  <= (select c.fin from concursos c
-					inner join fotografias f on f.idconcurso = c.id)
+	use master
+	drop database examenintegrador
 
 
-					select * from Fotografias
-	exec SP_descalificar 11
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 --3) Al insertar una fotografía verificar que el usuario creador de la fotografía tenga el
 --ranking suficiente para participar en el concurso. También se debe verificar que el
 --concurso haya iniciado y no finalizado. Si ocurriese un error, mostrarlo con un
 --mensaje aclaratorio. De lo contrario, insertar el registro teniendo en cuenta que la
 --fecha de publicación es la fecha y hora del sistema.
 --(30 puntos)
+
+	go
+	create trigger tr_verificar on fotografias
+	instead of insert 
+	as
+	begin 
+			
+			declare @prom decimal
+
+		
+			select @prom = avg(v.puntaje) from participantes p
+			inner join fotografias f on p.id = f.idparticipante
+			inner join votaciones v on v.idfotografia = f.id
+			where p.id = (select id from inserted)
+				
+			begin try
+			if @prom > (select c.rankingminimo from concursos c
+			where c.id = (select idconcurso from inserted) and  getdate() between c.Inicio and c.fin
+			begin
+						
+					
+					---	commit transaction
+
+
+			end
+
+			else 
+				print 'el concurso termino'
+			end 
+
+
+
+
+			select * from concursos
+	end
+	go	
+
+
+
+
+
+
+
+
+
+
+
+
+
 --4) Al insertar una votación, verificar que el usuario que vota no lo haga más de una vez
 --para el mismo concurso ni se pueda votar a sí mismo. Tampoco puede votar una
 --fotografía descalificada. Si ninguna validación lo impide insertar el registro de lo
