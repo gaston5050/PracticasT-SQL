@@ -154,52 +154,78 @@ End
 --fecha de publicación es la fecha y hora del sistema.
 --(30 puntos)
 
+
+
 	go
-	create trigger tr_verificar on fotografias
+	alter trigger tr_verificar on fotografias
 	instead of insert 
 	as
 	begin 
 			
-			declare @prom decimal
+			declare @idparticipante int
+			declare @idconcurso int
+			declare @concursovigente int
+			declare @rankingParticipante decimal (5,2)
+			declare @rankingMinimo decimal (5,2)
 
-		
-			select @prom = avg(v.puntaje) from participantes p
-			inner join fotografias f on p.id = f.idparticipante
-			inner join votaciones v on v.idfotografia = f.id
-			where p.id = (select id from inserted)
-				
-			begin try
-			if @prom > (select c.rankingminimo from concursos c
-			where c.id = (select idconcurso from inserted) and  getdate() between c.Inicio and c.fin
+
+			select @idconcurso = idconcurso, @idparticipante = idparticipante from inserted
+
+			
+			select @concursovigente = count(*) from concursos c
+			where @idconcurso = c.ID and getdate() between c.Inicio and c.Fin
+
+			select @rankingMinimo = c.rankingminimo from concursos c
+			where @idconcurso = c.ID
+
+			select @rankingParticipante = isnull(avg(v.puntaje), 0) from votaciones v
+			inner join fotografias f on f.ID = V.IDFotografia
+			where f.IDParticipante = @idparticipante
+
+
+			if @concursovigente = 0
 			begin
-						
-					
-					---	commit transaction
-
+				raiserror( 'concurso finalizado', 16 , 1)
+				return 
 
 			end
+			
+			if @rankingParticipante < @rankingMinimo
+			begin
+					raiserror( 'ranking insuficiente' , 16, 1)
+					return 
+			end
+			
+			
+			insert into fotografias 
+			select idparticipante, idconcurso, titulo, 0, getdate() from inserted
+					
 
-			else 
-				print 'el concurso termino'
-			end 
 
 
-
-
-			select * from concursos
 	end
 	go	
 
 
+	select * from Concursos
+	set dateformat dmy
+	update concursos set fin = cast ('29-06-2023' as datetime)
+	where id = 1
+	select * from Fotografias
 
 
 
+insert into Fotografias(IDParticipante, IDConcurso, Titulo, Descalificada, Publicacion)
+Values(1, 2, 'No deberia guardarlo', 0, getdate())
 
+insert into Fotografias(IDParticipante, IDConcurso, Titulo, Descalificada, Publicacion)
+Values(1, 1, 'No le da el ranking', 0, getdate())
 
+ select IDParticipante, Isnull(AVG(v.Puntaje),0)  
+ FROM Votaciones v JOIN Fotografias f on v.IDFotografia = f.ID 
+  group by IDParticipante
 
-
-
-
+  update concursos set rankingminimo = 9  where id = 1
 
 
 --4) Al insertar una votación, verificar que el usuario que vota no lo haga más de una vez
@@ -207,6 +233,86 @@ End
 --fotografía descalificada. Si ninguna validación lo impide insertar el registro de lo
 --contrario, informarlo con un mensaje de error.
 --(20 puntos)
+	
+	select * from Votaciones
+	select * from Fotografias
+Insert into Votaciones(IDVotante, IDFotografia, Fecha, Puntaje)
+Values (1, 2, getdate(), 10)
+
+Insert into Votaciones(IDVotante, IDFotografia, Fecha, Puntaje)
+Values (1, 6, getdate(), 10)
+
+
+	alter trigger tr_votacion on votaciones 
+	after insert 
+	as 
+	begin
+		
+		declare @cantvotos int
+		declare @idvotante int
+		declare @idfotografia int
+		
+		select @idvotante = idvotante, @idfotografia = idfotografia from inserted
+		
+		select @cantvotos = COUNT(*) from Votaciones v
+		where @idvotante = IDVotante
+
+
+		begin try 
+			begin transaction
+		if @cantvotos > 1 
+		begin
+			raiserror('son muchos votos', 16,1)
+	
+		end
+
+		if   (select COUNT(*) from votaciones v inner join Fotografias f on
+		f.ID = v.IDFotografia
+		where @idvotante = v.IDVotante
+		) > 0
+		begin
+			raiserror('no se puede votar a uno mismo', 16,1)
+		
+		end
+
+
+			commit transaction
+		end try 
+		begin catch
+			
+			rollback transaction
+			raiserror('no te pases de listo', 16,1)
+		end catch
+			
+		
+
+	end
+	Insert into Votaciones(IDVotante, IDFotografia, Fecha, Puntaje)
+Values (1, 1, getdate(), 10)
+
+
+
+
+
+
 --5) Hacer un listado en el que se obtenga: ID de participante, apellidos y nombres de los
 --participantes que hayan registrado al menos dos fotografías descalificadas.
 --(10 puntos)
+
+
+
+SELECT p.id, p.apellidos, p.nombres from Participantes p
+where (select COUNT(*) from Fotografias f where f.IDParticipante = p.ID and Descalificada <>0) >1
+
+
+
+select p.id, p.apellidos, p.nombres, COUNT(*) descalificadas from Fotografias f
+inner join Participantes p on p.ID = f.IDParticipante
+where f.Descalificada = 1
+group by p.ID,p.Apellidos, p.nombres
+having COUNT(*)  > 2
+
+select * from Fotografias
+
+update Fotografias set Descalificada = 1 
+where ID = 10002
