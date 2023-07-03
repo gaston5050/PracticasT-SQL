@@ -130,6 +130,43 @@ select * from cargos
 --La cantidad de horas es un número entero >= 0.
 --NOTA: No hace falta multiplicarlo por la cantidad de semanas que hay en un año.
 --20
+
+select * from docentes
+select * from PlantaDocente
+order by legajo asc
+select * from materias
+select d.legajo, sum(m.horasSemanales) from docentes d
+inner join PlantaDocente pd on pd.Legajo = D.Legajo
+inner join materias m on m.ID_Materia = PD.ID_Materia
+where año = 2021
+GROUP BY D.Legajo
+
+SELECT  d.legajo , dbo.fn_cantHorasxdocente(d.Legajo, 2021) from docentes d
+
+
+where d.legajo = 1
+
+
+inner join PlantaDocente pd on d.Legajo = pd.Legajo
+
+
+
+alter function fn_cantHorasxdocente(
+	@id_legajo int,
+	@año int
+	)
+returns int 
+begin
+	declare @total int
+	select @total = isnull(sum(m.horasSemanales), 0) from materias m
+	inner join plantadocente pd on pd.ID_Materia = m.ID_Materia
+	where @id_legajo = pd.Legajo  and @año = pd.Año
+
+
+	return @total
+end
+
+
  create function fn_cantidadHoras (
 	@id_legajo varchar(9)
 	)
@@ -148,5 +185,25 @@ end
 --5) Haciendo uso de la base de datos que se encuentra en el Campus Virtual
 --resolver:
 --Hacer un procedimiento almacenado que reciba un ID de Materia y liste la
---20
+
 --cantidad de docentes distintos que han trabajado en ella.
+
+alter procedure sp_cantidadDocentes (
+	@id_materia int 
+	)
+as 
+begin
+
+	
+	select count(distinct p.legajo) from PlantaDocente p
+	where p.id_Materia = @id_materia
+
+	
+	
+end
+
+select count(distinct p.legajo) from PlantaDocente p
+group by p.ID_Materia
+exec sp_cantidadDocentes 7
+
+
