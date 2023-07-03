@@ -1,6 +1,6 @@
 use master
-go
-drop database ExamenIntegrador20231C
+--go
+---drop database ExamenIntegrador20231C
 go
 Create Database ExamenIntegrador20231C
 Go

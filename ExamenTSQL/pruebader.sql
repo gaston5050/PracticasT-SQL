@@ -1,11 +1,12 @@
 use master
-go 
-drop database pruebaDerIntergrador
+--go 
+--drop database pruebaDerIntergrador
 go
 
 create database pruebaDerIntergrador
 go 
-
+use pruebaDerIntergrador
+go
 
 create table Actividades (
 ID_Actividad int not null primary key identity,
@@ -21,15 +22,16 @@ Apellidos varchar(50) not null,
 Nombres varchar(50) not null,
 FechaNacimiento datetime not null,
 FechaAsociacion datetime not null,
-Estado bit not null
-)
-
-alter table ActividadesxSocio (
+Estado bit not null)
+go
+create table ActividadesxSocio (
 ID_Socio int not null foreign key references Socios(ID_Socio),
 ID_Actividad int not null foreign key references Actividades(ID_Actividad),
 FechaInscripcion datetime not null,
 primary key(ID_Socio, ID_Actividad)
 )
+
+
 
 
 
