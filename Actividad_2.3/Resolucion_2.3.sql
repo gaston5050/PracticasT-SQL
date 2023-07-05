@@ -1,11 +1,31 @@
 --# Consulta
 --1 Listado con la cantidad de agentes
+	SELECT COUNT (*) FROM AGENTES
+	SELECT * FROM AGENTES
+
+
+
+
+
+
+
+
 --	select * from agentes
 --	select count(Legajo) from agentes
 --2 Listado con importe de referencia promedio de los tipos de infracciones
 
---	select   idtipoinfraccion, avg(monto) from multas
---	group by IdTipoInfraccion
+	SELECT * FROM TipoInfracciones
+
+	SELECT AVG(IMPORTEREFERENCIA) FROM TipoInfracciones
+
+
+
+
+
+
+
+--select   idtipoinfraccion, avg(monto) from multas
+--group by IdTipoInfraccion
 --	order by idTipoInfraccion asc
 select * from mediosPago
 select * from Pagos
@@ -17,16 +37,54 @@ select * from Pagos
 --3 Listado con la suma de los montos de las multas. Indistintamente de si fueron
 --pagadas o no.
 
+	select SUM(monto) from multas
+
+	select * from multas
+
+
+
+
+
+
+
+
 	select idtipoinfraccion, sum(monto) from multas
 	group by IdTipoInfraccion
 
 
 --4 Listado con la cantidad de pagos que se realizaron.
+
+select * from pagos
+	select COUNT(*) from pagos
+
+
+
+
+
+
+
+
 		select * from multas 
 		where pagada = 0
 
 --5 Listado con la cantidad de multas realizadas en la provincia de Buenos Aires.
 --NOTA: Utilizar el nombre 'Buenos Aires' de la provincia.
+
+
+select p.provincia, COUNT(*) from Multas m
+inner join Localidades l on l.IDLocalidad = m.IDLocalidad
+inner join provincias p on p.idprovincia = l.IDLocalidad
+group by p.Provincia
+where p.provincia like 'buenos aires'
+
+
+
+select * from multas
+
+
+
+
+
 	select * from Localidades
 	select * from provincias
 	select m.* from multas m
@@ -36,6 +94,20 @@ select * from Pagos
 
 
 --6 Listado con el promedio de antigüedad de los agentes que se encuentren activos.
+
+	select  AVG(datediff(year, a.fechaingreso, getdate()) *1.0) from Agentes a
+	where a.Activo = 1
+	group by a.IdAgente
+
+	select * from Agentes
+
+
+
+
+
+
+
+
 	select datediff(year,fechaingreso, getdate()) from agentes
 
 	select avg (datediff(year,fechaingreso, getdate())*1.0) from agentes
@@ -43,6 +115,24 @@ select * from Pagos
 	select * from Agentes
 
 --7 Listado con el monto más elevado que se haya registrado en una multa.
+		
+		select MAX(monto) from multas
+
+		select * from multas
+		order by Monto desc
+
+
+
+
+
+
+
+
+
+
+
+
+
 	select max(monto) from multas
 	select * from multas
 	order by monto desc
@@ -50,11 +140,31 @@ select * from Pagos
 
 
 --8 Listado con el importe de pago más pequeño que se haya registrado.
+
+
+	select MIN(monto) from Multas
+
+
+
+
+
+
+
 	select min(monto) from multas
 --9 Por cada agente, listar Legajo, Apellidos y Nombres y la cantidad de multas que
 --registraron.
+
+
+	select a.Legajo, A.Nombres,a.Apellidos,  (select COUNT(*) from Multas m 
+	where m.IdAgente = a.IdAgente)
+	from Agentes a
+
+
+
+
+
 	select ag.legajo, ag.apellidos, ag.nombres,count (m.IdAgente) cantidad from  agentes ag
-	inner join multas m on m.IdAgente = ag.IdAgente
+	left join multas m on m.IdAgente = ag.IdAgente
 	group by legajo, apellidos, nombres
 	
 	
@@ -72,6 +182,22 @@ order by IdTipoInfraccion
 --11 Por cada multa, indicar la fecha, la patente, el importe de la multa y la cantidad de
 --pagos realizados. Solamente mostrar la información de las multas que hayan sido
 --pagadas en su totalidad.
+	
+	select m.IdMulta, m.FechaHora, m.Patente, m.Monto, 
+	(select COUNT(*) from Pagos p where m.IdMulta = p.IDMulta) cantPagos
+	from  multas m
+	where (select SUM(Mul.monto) from Multas mul
+	where mul.IdMulta = m.IdMulta) < (select SUM(pag.importe) from Pagos pag
+	where pag.IDMulta = m.IdMulta)
+
+	select * from Multas where IdMulta = 47
+	select * from Pagos where IDMulta = 47
+
+
+
+
+
+
 		
 		select m.FechaHora, m.Patente, m.Monto, count( p.idpago) 
 		from multas m
@@ -88,6 +214,17 @@ order by IdTipoInfraccion
 
 
 --12 Listar todos los datos de las multas que hayan registrado más de un pago.
+
+	select * from Multas m
+	where (select COUNT(*) from Pagos p
+	where m.IdMulta = p.IDMulta) >1
+
+
+
+
+
+
+
 	
 	select * from multas
 	order by idmulta
@@ -96,6 +233,28 @@ order by IdTipoInfraccion
 
 --13 Listar todos los datos de todos los agentes que hayan registrado multas con un
 --monto que en promedio supere los $10000
+
+	select * from agentes
+
+	select * from Agentes a
+	where (select AVG(m.monto * 1.0) from Multas m
+	where m.IdAgente =a.IdAgente ) > 10000
+	
+
+	select m.idAgente, avg(m.monto) monti from multas m 
+	group by m.IdAgente
+
+	select *, (select avg( m.monto) from Multas m
+	where m.IdAgente = a.IdAgente) monsto
+	
+	from agentes a
+	having monsto > 10000
+
+
+
+
+
+
 	
 	select ag.*,  from multas ag
 
@@ -113,6 +272,24 @@ order by IdTipoInfraccion
 	create trigger 
 
 --14 Listar el tipo de infracción que más cantidad de multas haya registrado.
+
+		select top 1 m.IdTipoInfraccion, count(*)  cantidad from Multas m
+
+		group by IdTipoInfraccion
+
+		order by cantidad desc
+		
+
+		
+
+
+
+
+
+
+
+
+
 	select m.idtipoinfraccion, count (*) from multas m
 	group by IdTipoInfraccion
 
@@ -120,6 +297,17 @@ order by IdTipoInfraccion
 
 
 --15 Listar por cada patente, la cantidad de infracciones distintas que se cometieron.
+
+		select m.patente, COUNT(distinct m.idtipoinfraccion) from Multas m
+		group by m.Patente
+
+
+
+
+
+
+
+
 
 	select m.patente, count(*) from multas m
 	group by Patente
@@ -136,6 +324,21 @@ order by IdTipoInfraccion
 --16 Listar por cada patente, el texto literal 'Multas pagadas' y el monto total de los pagos
 --registrados por esa patente. Además, por cada patente, el texto literal 'Multas por
 --pagar' y el monto total de lo que se adeuda.
+
+
+	select m.patente, 'multas pagas ', isnull(
+	(select SUM(mul.monto) from Multas mul 
+	where mul.IdMulta = m.IdMulta), 0)
+	,' multas por pagar',
+	isnull((select SUM( p.importe) from Pagos p
+	where p.IDMulta = m.idmulta), 0)
+	from multas m
+
+
+
+
+
+
 
 	SELECT M.PATENTE,
 	'PAGADAS', 
@@ -157,6 +360,28 @@ order by IdTipoInfraccion
 
 --17 Listado con los nombres de los medios de pagos que se hayan utilizado más de 3
 --veces.
+
+		select mp.nombre, COUNT( p.IDMedioPago) pagosss from MediosPago mp
+		inner join Pagos p on p.IDMedioPago = mp.IDMedioPago
+		group by mp.Nombre
+		having COUNT( p.IDMedioPago) > 3
+		order by pagosss desc
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
++
 	--select * from MediosPago
 	--select * from pagos
 	--SELECT * FROM Multas
