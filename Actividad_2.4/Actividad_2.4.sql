@@ -4,6 +4,31 @@
 --# Consulta
 --1 La patente, apellidos y nombres del agente que labró la multa y monto de aquellas
 --multas que superan el monto promedio.
+
+GO
+SELECT M.PATENTE, A.NOMBRES, A.APELLIDOS FROM MULTAS M
+INNER JOIN AGENTES A ON A.IDAGENTE = M.IDAGENTE
+WHERE M.Monto > (SELECT AVG(M.MONTO *1.0) FROM Multas M)
+GO
+
+SELECT AVG(M.MONTO *1.0) FROM Multas M
+SELECT * FROM MULTAS
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	go
 	select avg(m.monto) from multas m
 	select *  from multas
@@ -13,6 +38,25 @@
 	group by patente, Apellidos, Nombres, monto
 --2 Las multas que sean más costosas que la multa más costosa por 'No respetar señal
 --de stop'.
+
+select * from Multas mul
+where mul.Monto > (
+SELECT MAX(M.MONTO) FROM Multas M
+INNER JOIN TipoInfracciones TI ON M.IdTipoInfraccion = TI.IdTipoInfraccion
+WHERE TI.Descripcion like 'no respetar señal de stop')
+
+select * from tipoinfracciones
+select * from Multas 
+
+
+
+
+
+
+
+
+
+
 
 go
 			select m.* from multas m 
@@ -39,6 +83,17 @@ go
 
 --3 Los apellidos y nombres de los agentes que no hayan labrado multas en los dos
 --primeros meses de 2023.
+
+
+
+
+
+
+
+
+
+
+
 use AgenciaTransito
 go
 	select ag.apellidos, ag.nombres, ag.IdAgente from  agentes ag

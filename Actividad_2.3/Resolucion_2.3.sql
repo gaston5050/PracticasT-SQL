@@ -419,22 +419,43 @@ select * from multas
 order by idAgente asc
  select * from agentes
 
- SELECT ag.idagente, AG.LEGAJO, AG.NOMBRES, AG.APELLIDOS WFROM AGENTES AG
+ select a.Apellidos, a.nombres from Agentes a
+ where (select COUNT(distinct m.idtipoinfraccion) from Multas m
+ where a.IdAgente = m.IdAgente) >2
+
+
+
+
+ go
+ SELECT ag.idagente, AG.LEGAJO, AG.NOMBRES, AG.APELLIDOS FROM AGENTES AG
  where (
- SELECT DISTINCT COUNT(t.IDTIPOINFRACcION) FROM TipoInfracciones t
+ SELECT  COUNT(distinct t.IDTIPOINFRACcION) FROM TipoInfracciones t
  inner join multas m on m.IdTipoInfraccion = t.IdTipoInfraccion
  where m.IdAgente = ag.IdAgente
  ) >2
-
+ go
  SELECT * FROM TipoInfracciones 
 
 --19 El total recaudado en concepto de pagos discriminado por nombre de medio de
 --pago.
 
-	 SELECT MP.NOMBRE, SUM(P.IMPORTE) FROM PAGOS P
+	 select mp.nombre nome, SUM(p.importe) from Pagos p
+	 inner join MediosPago mp on mp.IDMedioPago = p.IDMedioPago
+	 group by mp.nombre
+	 order by nome desc
+
+
+
+
+
+
+
+
+
+	 SELECT MP.NOMBRE nome, SUM(P.IMPORTE) FROM PAGOS P
 	 INNER JOIN MediosPago MP ON MP.IDMedioPago = P.IDMedioPago
 	 GROUP BY MP.NOMBRE ,P.IDMedioPago
-
+	  order by nome desc
 
 
 --20 Un listado con el siguiente formato:
@@ -449,6 +470,37 @@ order by idAgente asc
 --Buenos Aires Provincia $xxxx
 --Santa Fe Provincia $xxxx
 --Argentina País $xxxx
+
+	select l.localidad, 'Localidad', SUM(p.importe)
+	from Localidades l
+	inner join multas m on m.idlocalidad = l.IDLocalidad
+	inner join Pagos p on p.IDMulta = m.IdMulta
+	group by l.Localidad
+	union 
+	select p.provincia, 'Provincia ', SUM(pa.importe)
+	from provincias p
+	inner join Localidades l on l.IDProvincia = p.IDProvincia
+	inner join multas m on m.idlocalidad = l.IDLocalidad
+	inner join Pagos pa on pa.IDMulta = m.IdMulta
+	group by p.Provincia
+	union 
+		select 'ARGENTINA', 'Pais ', SUM(pa.importe)
+	from Pagos PA
+	ORDER BY 3 ASC
+
+
+
+select * from multas
+select * from Provincias
+select * from Localidades
+	select 
+	
+
+
+
+
+
+
 
 
 

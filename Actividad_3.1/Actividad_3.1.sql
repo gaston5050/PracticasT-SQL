@@ -3,17 +3,74 @@
 --multas con los datos del agente incluyendo apellidos y nombres, nombre de la
 --localidad, patente del vehículo, fecha y monto de la multa.
 
+alter  view VW_multass 
+as
+	select m.idmulta, L.localidad , m.Patente ,m.FechaHora, m.Monto from Multas m
+	inner join Localidades l on l.IDLocalidad = m.idlocalidad 
+end
+
+
+
+select localidad from VW_multass
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	create view VW_Multas as 
 	select ag.apellidos  APELLIDO_AGENTE, ag.nombres NOMBRES_AGENTE, l.localidad LOCALIDAD, m.patente, m.fechaHORA FECHA, m.monto MONTO    from multas m
 	INNER JOIN AGENTES AG ON AG.IdAgente = M.IdAgente 
 	INNER JOIN Localidades L ON M.IDLocalidad = L.IDLocalidad
 
-	SELECT * FROM vw_multas
+	SELECT * FROM vw_multass
 
 
 
 --2 Modificar la vista VW_Multas para incluir el legajo del agente, la antigüedad en años,
 --el nombre de la provincia junto al de la localidad y la descripción del tipo de multa.
+sele
+alter view vw_multass 
+as
+select ag.legajo, datediff(year,  ag.FechaNacimiento, getdate()) antiguedad,
+	ag.apellidos  APELLIDO_AGENTE, ag.nombres NOMBRES_AGENTE, l.localidad LOCALIDAD, 
+	m.patente, m.fechaHORA FECHA, m.monto MONTO,tp.Descripcion    from multas m
+	INNER JOIN AGENTES AG ON AG.IdAgente = M.IdAgente 
+	INNER JOIN Localidades L ON M.IDLocalidad = L.IDLocalidad
+	inner join TipoInfracciones tp on tp.IdTipoInfraccion = m.IdTipoInfraccion
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	GO
 	alter view  vw_multas as
 	select ag.legajo LEGAJO, DATEDIFF(YEAR, AG.FECHAINGRESO,getdate()) ANTIGUEDAD, ag.apellidos  APELLIDO_AGENTE, ag.nombres NOMBRES_AGENTE, l.localidad LOCALIDAD,P.Provincia PROVINCIA, m.patente PATENTE, m.fechaHORA FECHA, m.monto MONTO, TP.Descripcion DESCRIPCION    from multas m
@@ -47,8 +104,45 @@
 --parámetro que representa la patente de un vehículo. Listar las multas que registra.
 --Indicando fecha y hora de la multa, descripción del tipo de multa e importe a abonar.
 --También una leyenda que indique si la multa fue abonada o no.
+		select * from Multas
+		exec sp_multasVehiculo 'AB123CD'
+
+		exec sp_multasVehiculo  'CD456EF'
+
+		alter procedure sp_multasVehiculo (
+			@patente varchar(50)
+			)
+		as
+		begin
+			select m.FechaHora,Ti.descripcion, m.monto, 
+			case 
+			when m.pagada = 1 then 'pagada'
+			when m.pagada = 0 then 'no pagada'
+			end 
+			from  multas m
+			inner join tipoinfracciones ti on ti.idtipoinfraccion = m.idtipoinfraccion
+			where m.Patente = @patente
+
+		end
+
+
+
+
+
+
 --select convert(char(8), getdate(), 108) as [hh:mm:ss]; X
 --select convert(varchar, getdate(), 1) V
+
+
+
+
+
+
+
+
+
+
+
  CREATE PROCEDURE  SP_MULTASVEHICULO ( @patente varchar (7) )
  as
  begin 
@@ -145,6 +239,51 @@ create function fn_totalPagos(
 
 --4 Crear una función que reciba un parámetro que representa la patente de un vehículo
 --y devuelva el total adeudado por ese vehículo en concepto de multas.
+	print dbo.
+	select * from pagos
+	select * from Multas
+	select dbo.fn_multas ('EF789GH')
+
+	alter function fn_multas 
+	( @patente varchar(10)
+	)
+	returns money
+	as
+	begin 
+		declare @deudaTotal money
+		declare @pagoTotal money
+		declare @deudaNeta money
+
+		select @deudaTotal = isnull(sum(monto), 0) from Multas 
+		where Patente like @patente
+
+		select @pagoTotal = isnull(SUM( p.importe ),0) from Pagos p
+		inner join multas m on m.IdMulta = p.IDMulta
+		where m.Patente = @patente
+
+		 set @deudaNeta = @deudaTotal - @pagoTotal
+		 if @deudaNeta < 0 
+		 begin 
+
+				set @deudaNeta = 0
+		 end
+
+		return @deudaneta
+	end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 create function fn_totalMultasActual(
 	@patente varchar (9)
@@ -158,6 +297,9 @@ select @total = sum(m.monto) from multas m
 where m.Patente like @patente
 return @total
 end
+
+
+
 select dbo.fn_totalMultasactual ('ab123cd')
 select * from multas
 
