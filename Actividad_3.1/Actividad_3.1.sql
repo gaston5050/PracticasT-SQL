@@ -3,15 +3,15 @@
 --multas con los datos del agente incluyendo apellidos y nombres, nombre de la
 --localidad, patente del vehículo, fecha y monto de la multa.
 
-alter  view VW_multass 
+create  view VW_multass 
 as
 	select m.idmulta, L.localidad , m.Patente ,m.FechaHora, m.Monto from Multas m
 	inner join Localidades l on l.IDLocalidad = m.idlocalidad 
-end
 
 
 
-select localidad from VW_multass
+
+select * from VW_multass
 
 
 
@@ -109,7 +109,7 @@ select ag.legajo, datediff(year,  ag.FechaNacimiento, getdate()) antiguedad,
 
 		exec sp_multasVehiculo  'CD456EF'
 
-		alter procedure sp_multasVehiculo (
+		create procedure sp_multasVehiculo (
 			@patente varchar(50)
 			)
 		as
@@ -239,6 +239,16 @@ create function fn_totalPagos(
 
 --4 Crear una función que reciba un parámetro que representa la patente de un vehículo
 --y devuelva el total adeudado por ese vehículo en concepto de multas.
+	    
+
+	
+	
+	
+	
+	
+	
+	
+	
 	print dbo.
 	select * from pagos
 	select * from Multas
@@ -324,7 +334,32 @@ order by Patente asc
 
 
 --5 Crear una función que reciba un parámetro que representa la patente de un vehículo
---y devuelva el total abonado por ese vehículo en concepto de multas.
+--y devuelva el total abonado por ese vehículo en concepto de multas.+
+
+select * from multas
+select dbo.fn_totaAbonado ('AB123CD')
+
+		create function fn_totaAbonado ( 
+		@patente varchar (10)
+		)
+		returns money
+		as
+		begin 
+			declare @total money
+			select @total = sum(p.importe) from pagos p
+			inner join multas m on p.idmulta = m.IdMulta
+
+			return @total
+				
+		
+		end
+
+
+
+
+
+
+
 
 	create FUNCTION fn_totalAbonado (
 	@patente varchar(9)
@@ -353,6 +388,27 @@ order by Patente asc
 --6 Crear un procedimiento almacenado llamado SP_AgregarMulta que reciba
 --IDTipoInfraccion, IDLocalidad, IDAgente, Patente, Fecha y hora, Monto a abonar y
 --registre la multa.
+
+	
+	alter procedure sp_AgregarMulta (
+	@IDTipoInfraccion int,
+	@IDLocalidad int,
+	@IDAgente int,
+	@Patente varchar(10),
+	@FechaYHora datetime,
+	@Monto money)
+	as
+
+	begin 
+		insert into multas (IdTipoInfraccion, IDLocalidad, IdAgente,Patente, FechaHora, Monto, pagada)
+		values (@IDTipoInfraccion, @IDLocalidad, @IDAgente, @Patente, getdate(), @monto, 0)
+			
+
+	 end
+	 exec sp_agregarMulta 2, 2 , 5 , 'ij345kl', 3, 152
+d
+
+
 select * from multas
 	alter procedure sp_agregarMulta( 
 	@idTipoInfraccion int,
@@ -379,6 +435,24 @@ select * from multas
 --estado Pagada de todas las multas a partir de los pagos que se encuentran
 --registrados (La suma de todos los pagos de una multa debe ser igual o mayor al
 --monto de la multa para considerarlo Pagado).
+
+	create procedure SP_ProcesarPagos 
+	as
+	begin
+
+
+		update multas set Pagada = 1
+		 where 
+
+	end
+	
+
+
+
+
+
+
+
 
 select distinct patente from multas
 	

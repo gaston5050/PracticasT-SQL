@@ -5,14 +5,15 @@
 --1 La patente, apellidos y nombres del agente que labró la multa y monto de aquellas
 --multas que superan el monto promedio.
 
+
+
 GO
 SELECT M.PATENTE, A.NOMBRES, A.APELLIDOS FROM MULTAS M
 INNER JOIN AGENTES A ON A.IDAGENTE = M.IDAGENTE
 WHERE M.Monto > (SELECT AVG(M.MONTO *1.0) FROM Multas M)
+order by a.Apellidos desc
 GO
 
-SELECT AVG(M.MONTO *1.0) FROM Multas M
-SELECT * FROM MULTAS
 
 
 
@@ -30,14 +31,24 @@ SELECT * FROM MULTAS
 
 
 	go
-	select avg(m.monto) from multas m
-	select *  from multas
-	select m.patente, ag.apellidos, ag.nombres, m.monto, (select avg(m.monto) from multas m) prome from agentes ag
+	
+	select m.patente,  ag.nombres, ag.apellidos,m.monto, (select avg(m.monto) from multas m) prome from agentes ag
 	inner join multas m on m.IdAgente = ag.IdAgente
 	WHERE m.Monto > (select avg(m.monto) from multas m)
 	group by patente, Apellidos, Nombres, monto
+	order by Apellidos desc
 --2 Las multas que sean más costosas que la multa más costosa por 'No respetar señal
 --de stop'.
+
+
+
+
+
+
+
+
+
+
 
 select * from Multas mul
 where mul.Monto > (
