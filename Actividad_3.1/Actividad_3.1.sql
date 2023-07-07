@@ -435,45 +435,70 @@ select * from multas
 --estado Pagada de todas las multas a partir de los pagos que se encuentran
 --registrados (La suma de todos los pagos de una multa debe ser igual o mayor al
 --monto de la multa para considerarlo Pagado).
-
-	create procedure SP_ProcesarPagos 
+	exec SP_procesarPagos
+	alter procedure SP_ProcesarPagos 
 	as
 	begin
 
 
 		update multas set Pagada = 1
-		 where 
+		 where  IdMulta in (
+
+	
+						select idmulta from ( 
+			
+							select m.idmulta,
+							SUM(m.monto) deuda,
+							SUM(p.importe) pagos 
+								from Multas m
+								inner join Pagos p on p.IDMulta	= m.IdMulta
+								group by m.IdMulta
+						                   )  aux
+											where aux.deuda <= pagos				
+				
+						
+													) 
+						
+
+						
+
+					
+
 
 	end
-	
+
+	select * from Multas
+	where Pagada = 1
+	update Multas set Pagada = 0
+
+	select m.idmulta, sum(m.monto) deuda, SUM(p.importe) from Multas m
+	inner join Pagos p on p.IDMulta = p.IDMulta
+	where p.IDMulta = m.IdMulta
+	group by m.IdMulta )
+	where 
 
 
 
 
-
-
-
-
-select distinct patente from multas
 	
 --	
-exec sp_procesarpagos
+exec sp_procesarpagos2
 
-	alter procedure SP_procesarPagos
+	create procedure SP_procesarPagos2
 	as 
 	begin 
 				update multas set pagada = 1
 				where idmulta  in (
 									select idmulta from (
-									select distinct p.idmulta,
-									(select sum(m.monto) from multas m 
-									where  p.idmulta = m.idmulta) deudaPorMulta,
+										select distinct p.idmulta,
+										(select sum(m.monto) from multas m 
+										where  p.idmulta = m.idmulta) deudaPorMulta,
 
-									(select sum(pa.importe) from pagos pa
-									left join multas m on pa.IDMulta = m.idmulta
-									where  p.idmulta = m.idmulta) pagoMulta
+										(select sum(pa.importe) from pagos pa
+										left join multas m on pa.IDMulta = m.idmulta
+										where  p.idmulta = m.idmulta) pagoMulta
 
-									from pagos p
+										from pagos p
 									)  aux
 									where aux.deudaPorMulta <= aux.pagoMulta
 							   	)
