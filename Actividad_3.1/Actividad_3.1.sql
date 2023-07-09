@@ -435,12 +435,13 @@ select * from multas
 --estado Pagada de todas las multas a partir de los pagos que se encuentran
 --registrados (La suma de todos los pagos de una multa debe ser igual o mayor al
 --monto de la multa para considerarlo Pagado).
+	select * from multas
 	exec SP_procesarPagos
-	alter procedure SP_ProcesarPagos 
+	create procedure SP_ProcesarPagos 
 	as
 	begin
 
-
+	select * from multas
 		update multas set Pagada = 1
 		 where  IdMulta in (
 
@@ -458,11 +459,6 @@ select * from multas
 				
 						
 													) 
-						
-
-						
-
-					
 
 
 	end

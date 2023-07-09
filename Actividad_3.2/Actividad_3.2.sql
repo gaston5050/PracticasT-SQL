@@ -4,10 +4,41 @@
 --Ejercicio
 --1
 --Hacer un trigger que al eliminar un Agente su estado Activo pase de True a False.
+	select * from agentes
+	delete from agentes 
+	where idagente = 2
+	drop trigger tr_eliminarAgente
+
+	alter trigger tr_eliminarAgente on agentes
+	instead of delete
+	as 
+	begin
+		declare @idAgente int
+		select @idAgente =  idAgente from deleted
+		print @idagente
+		update agentes set Activo = 0
+		where IdAgente = @idAgente
+	end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	SELECT * FROM AGENTES
+	SELECT * FROM MULTAS
 	delete from Agentes where 
-	IdAgente = 3
-	 
+	IdAgente = 11
+	 drop trigger tr_eliminar_agente
 	 create trigger tr_eliminar_agente on agentes
 	 instead of delete
 	 as 
@@ -23,12 +54,72 @@
 
 
 --2
---Modificar el trigger anterior para que al eliminar un Agente y si su estado Activo ya se encuentra
+--Modificar el trigger anterior para que al eliminar un Agente y si su estado Activo ya 
+--se encuentra
 --previamente en False entonces realice las siguientes acciones:
---Cambiar todas las multas efectuadas por ese agente y establecer el valor NULL al campo IDAgente.
+--Cambiar todas las multas efectuadas por ese agente y establecer el valor 
+--NULL al campo IDAgente.
 --Eliminar físicamente al agente en cuestión.
-
 --Utilizar una transacción
+
+
+ alter trigger tr_eliminaragente
+ on agentes
+ instead of delete
+ as
+ begin
+	
+		declare @idAgente int
+		declare @activo bit 
+			
+		select @idAgente = idagente from deleted
+		select @activo = activo from deleted
+
+		begin try
+			begin transaction
+				if @activo = 0 begin
+
+					update multas set IdAgente = null
+					where IdAgente = @idAgente
+					
+					delete from agentes where IdAgente = @idAgente
+
+				  	commit transaction
+				end
+				else begin
+					update agentes set activo = 0
+					where IdAgente = @idAgente
+				end
+
+
+
+
+
+		end try
+		begin catch
+
+			rollback transaction
+		end catch
+
+
+ end
+
+
+ SELECT * FROM MULTAS
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 select * from agentes
 
 alter trigger tr_eliminar_agente on agentes
@@ -86,6 +177,22 @@ alter trigger tr_eliminar_agente on agentes
 --Aplicar un recargo del 20% al monto de la multa si no es la primera multa del vehículo en el año.
 --Aplicar un recargo del 25% al monto de la multa si no es la primera multa del mismo tipo de infracción del vehículo en el año.
 --Establecer el estado Pagada como False.
+
+
+		create trigger tr_insertarMulta on multas
+		instead of insert
+		as
+		begin
+
+			begin try
+				if 
+			end try
+			begin catch
+			end catch
+
+		end
+
+
 		
 --		Case 
 --    When Email Is null And Celular is null and Telefono is null then 'Incontactable'
